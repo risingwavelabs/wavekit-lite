@@ -11,7 +11,6 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.17.1
-	github.com/golang/mock v1.6.0
 	github.com/golang/snappy v1.0.0
 	github.com/google/go-github/v68 v68.0.0
 	github.com/google/wire v0.6.0
@@ -22,8 +21,10 @@ require (
 	github.com/prometheus/client_golang v1.21.1
 	github.com/prometheus/common v0.62.0
 	github.com/prometheus/prometheus v0.302.1
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli/v2 v2.27.6
+	go.uber.org/mock v0.5.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/mod v0.22.0
 	google.golang.org/protobuf v1.36.5

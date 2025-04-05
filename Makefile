@@ -7,7 +7,7 @@ EE ?= false
 ### OpenAPI         
 ###################################################
 
-OAPI_CODEGEN_VERSION=v2.1.0
+OAPI_CODEGEN_VERSION=v2.4.1
 OAPI_CODEGEN_BIN=$(PROJECT_DIR)/bin/oapi-codegen
 OAPI_GEN_DIR=$(PROJECT_DIR)/internal/apigen
 OAPI_CODEGEN_FIBER_BIN=$(PROJECT_DIR)/bin/oapi-codegen-fiber
@@ -59,7 +59,7 @@ install-sqlc:
 	@DIR=$(PROJECT_DIR)/bin VERSION=${SQLC_VERSION} ./scripts/install-sqlc.sh
 
 clean-querier:
-	@rm -f $(QUERIER_DIR)/*sql.gen.go
+	@rm -f $(QUERIER_DIR)/*.sql.gen.go || true
 	@rm -f $(QUERIER_DIR)/copyfrom_gen.go   
 	@rm -f $(QUERIER_DIR)/db_gen.go
 	@rm -f $(QUERIER_DIR)/models_gen.go
@@ -72,7 +72,7 @@ gen-querier: install-sqlc clean-querier
 ### mock 
 ###################################################
 
-MOCKGEN_VERSION=1.6.0
+MOCKGEN_VERSION=0.5.0
 MOCKGEN_BIN=$(PROJECT_DIR)/bin/mockgen
 
 install-mockgen: 
@@ -80,6 +80,10 @@ install-mockgen:
 
 gen-mock: install-mockgen
 	$(MOCKGEN_BIN) -source=internal/model/model.go -destination=internal/model/mock_gen.go -package=model
+	$(MOCKGEN_BIN) -source=internal/worker/executor.go -destination=internal/worker/mock/executor_mock_gen.go -package=mock
+	$(MOCKGEN_BIN) -source=internal/worker/lifecycle_handler.go -destination=internal/worker/mock/lifecycle_handler_mock_gen.go -package=mock
+	$(MOCKGEN_BIN) -source=internal/service/service.go -destination=internal/service/service_mock_gen.go -package=service
+	$(MOCKGEN_BIN) -source=internal/modelctx/modelctx.go -destination=internal/modelctx/mock/modelctx_mock_gen.go -package=mock
 
 ###################################################
 ### Common

@@ -6,16 +6,16 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
-	"github.com/risingwavelabs/wavekit/internal/apigen"
 	"github.com/risingwavelabs/wavekit/internal/conn/sql"
-	"github.com/risingwavelabs/wavekit/internal/model/querier"
 	"github.com/risingwavelabs/wavekit/internal/utils"
+	"github.com/risingwavelabs/wavekit/internal/zgen/apigen"
+	"github.com/risingwavelabs/wavekit/internal/zgen/querier"
 )
 
 func (s *Service) TestDatabaseConnection(ctx context.Context, params apigen.TestDatabaseConnectionPayload, orgID int32) (*apigen.TestDatabaseConnectionResult, error) {
 	cluster, err := s.m.GetOrgCluster(ctx, querier.GetOrgClusterParams{
-		ID:             params.ClusterID,
-		OrganizationID: orgID,
+		ID:    params.ClusterID,
+		OrgID: orgID,
 	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get cluster")
@@ -39,8 +39,8 @@ func (s *Service) TestDatabaseConnection(ctx context.Context, params apigen.Test
 
 func (s *Service) QueryDatabase(ctx context.Context, id int32, params apigen.QueryRequest, orgID int32, backgroundDDL bool) (*apigen.QueryResponse, error) {
 	db, err := s.m.GetOrgDatabaseByID(ctx, querier.GetOrgDatabaseByIDParams{
-		ID:             id,
-		OrganizationID: orgID,
+		ID:    id,
+		OrgID: orgID,
 	})
 	if err != nil {
 		if err == pgx.ErrNoRows {

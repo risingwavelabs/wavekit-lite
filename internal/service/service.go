@@ -4,17 +4,19 @@ import (
 	"context"
 	"time"
 
+	"github.com/cloudcarver/anchor/pkg/auth"
+	anchor_svc "github.com/cloudcarver/anchor/pkg/service"
+	"github.com/cloudcarver/anchor/pkg/taskcore"
 	"github.com/pkg/errors"
-	"github.com/risingwavelabs/wavekit/internal/apigen"
-	"github.com/risingwavelabs/wavekit/internal/auth"
 	"github.com/risingwavelabs/wavekit/internal/config"
 	"github.com/risingwavelabs/wavekit/internal/conn/http"
 	"github.com/risingwavelabs/wavekit/internal/conn/meta"
 	"github.com/risingwavelabs/wavekit/internal/conn/metricsstore"
 	"github.com/risingwavelabs/wavekit/internal/conn/sql"
-	"github.com/risingwavelabs/wavekit/internal/model"
-	"github.com/risingwavelabs/wavekit/internal/task"
 	"github.com/risingwavelabs/wavekit/internal/utils"
+	"github.com/risingwavelabs/wavekit/internal/zcore/model"
+	"github.com/risingwavelabs/wavekit/internal/zgen/apigen"
+	"github.com/risingwavelabs/wavekit/internal/zgen/taskgen"
 
 	prom_model "github.com/prometheus/common/model"
 )
@@ -42,15 +44,6 @@ const (
 )
 
 type ServiceInterface interface {
-	// Create a new user and its default organization
-	CreateNewUser(ctx context.Context, username, password string) (int32, error)
-
-	// SignIn authenticates a user and returns credentials
-	SignIn(ctx context.Context, params apigen.SignInRequest) (*apigen.Credentials, error)
-
-	// RefreshToken refreshes an authentication token using a refresh token
-	RefreshToken(ctx context.Context, userID int32, refreshToken string) (*apigen.Credentials, error)
-
 	// Cluster management
 	ImportCluster(ctx context.Context, params apigen.ClusterImport, orgID int32) (*apigen.Cluster, error)
 
@@ -140,16 +133,16 @@ type ServiceInterface interface {
 	ImportMetricsStore(context.Context, apigen.MetricsStoreImport, int32) (*apigen.MetricsStore, error)
 
 	// DeleteMetricsStore deletes a metrics store
-	DeleteMetricsStore(ctx context.Context, id int32, organizationID int32, force bool) error
+	DeleteMetricsStore(ctx context.Context, id int32, OrgID int32, force bool) error
 
 	// GetMetricsStore gets a metrics store by ID
-	GetMetricsStore(ctx context.Context, id int32, organizationID int32) (*apigen.MetricsStore, error)
+	GetMetricsStore(ctx context.Context, id int32, OrgID int32) (*apigen.MetricsStore, error)
 
 	// UpdateMetricsStore updates a metrics store
-	UpdateMetricsStore(ctx context.Context, id int32, req apigen.MetricsStoreImport, organizationID int32) (*apigen.MetricsStore, error)
+	UpdateMetricsStore(ctx context.Context, id int32, req apigen.MetricsStoreImport, OrgID int32) (*apigen.MetricsStore, error)
 
 	// ListClustersByMetricsStoreID lists all clusters by metrics store ID
-	ListMetricsStores(ctx context.Context, organizationID int32) ([]*apigen.MetricsStore, error)
+	ListMetricsStores(ctx context.Context, OrgID int32) ([]*apigen.MetricsStore, error)
 
 	// ListClustersByMetricsStoreID lists all clusters by metrics store ID
 	ListClustersByMetricsStoreID(ctx context.Context, id int32) ([]*apigen.Cluster, error)
@@ -162,7 +155,9 @@ type Service struct {
 	risectlm           meta.RisectlManagerInterface
 	metahttp           http.MetaHttpManagerInterface
 	metricsConnManager *metricsstore.MetricsManager
-	taskstore          task.TaskStoreInterface
+	taskRunner         taskgen.TaskRunner
+	taskstore          taskcore.TaskStoreInterface
+	anchorSvc          anchor_svc.ServiceInterface
 
 	now                 func() time.Time
 	generateHashAndSalt func(password string) (string, string, error)
@@ -176,9 +171,10 @@ func NewService(
 	risectlm meta.RisectlManagerInterface,
 	metricsConnManager *metricsstore.MetricsManager,
 	metahttp http.MetaHttpManagerInterface,
-	taskstore task.TaskStoreInterface,
-) ServiceInterface {
-
+	taskRunner taskgen.TaskRunner,
+	taskstore taskcore.TaskStoreInterface,
+	anchorSvc anchor_svc.ServiceInterface,
+) (ServiceInterface, error) {
 	s := &Service{
 		m:                   m,
 		now:                 time.Now,
@@ -188,7 +184,9 @@ func NewService(
 		risectlm:            risectlm,
 		metahttp:            metahttp,
 		metricsConnManager:  metricsConnManager,
+		taskRunner:          taskRunner,
 		taskstore:           taskstore,
+		anchorSvc:           anchorSvc,
 	}
-	return s
+	return s, nil
 }

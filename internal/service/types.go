@@ -1,14 +1,14 @@
 package service
 
 import (
-	"github.com/risingwavelabs/wavekit/internal/apigen"
-	"github.com/risingwavelabs/wavekit/internal/model/querier"
+	"github.com/risingwavelabs/wavekit/internal/zgen/apigen"
+	"github.com/risingwavelabs/wavekit/internal/zgen/querier"
 )
 
 func clusterToApi(cluster *querier.Cluster) *apigen.Cluster {
 	return &apigen.Cluster{
 		ID:             cluster.ID,
-		OrganizationID: cluster.OrganizationID,
+		OrgID:          cluster.OrgID,
 		Name:           cluster.Name,
 		Host:           cluster.Host,
 		Version:        cluster.Version,
